@@ -1,0 +1,204 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &5525872971914801771
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 440378474855576262}
+  - component: {fileID: 8260336885903868468}
+  - component: {fileID: 1399104828037654084}
+  m_Layer: 0
+  m_Name: MantisPlayer
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &440378474855576262
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5525872971914801771}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 8993908473941904788}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!143 &8260336885903868468
+CharacterController:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5525872971914801771}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Height: 0.7
+  m_Radius: 0.36
+  m_SlopeLimit: 45
+  m_StepOffset: 0.12
+  m_SkinWidth: 0.025
+  m_MinMoveDistance: 0
+  m_Center: {x: 0, y: 0.35, z: 0}
+--- !u!114 &1399104828037654084
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5525872971914801771}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa49874704be9dc4f9326cccfed8a9c5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MantisPunch.MantisPlayer
+  visual: {fileID: 8080223901736731243}
+  moveSpeed: 2.4
+  acceleration: 12
+  turnSpeed: 540
+  windup: 0.18
+  strikeTime: 0.06
+  recovery: 0.38
+  attackMovement: 0.25
+  hitRadius: 0.5
+  hitPause: 0.045
+--- !u!1001 &8888541504131541631
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 440378474855576262}
+    m_Modifications:
+    - target: {fileID: -8679921383154817045, guid: b2833aadc32ac604aa87a9edaa21e3b5, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 3.171563
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: b2833aadc32ac604aa87a9edaa21e3b5, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 3.171563
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: b2833aadc32ac604aa87a9edaa21e3b5, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 3.171563
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: b2833aadc32ac604aa87a9edaa21e3b5, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0.00000003692185
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: b2833aadc32ac604aa87a9edaa21e3b5, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -0.012915134
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: b2833aadc32ac604aa87a9edaa21e3b5, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -0.053358167
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: b2833aadc32ac604aa87a9edaa21e3b5, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: b2833aadc32ac604aa87a9edaa21e3b5, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: b2833aadc32ac604aa87a9edaa21e3b5, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: b2833aadc32ac604aa87a9edaa21e3b5, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: b2833aadc32ac604aa87a9edaa21e3b5, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: b2833aadc32ac604aa87a9edaa21e3b5, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: b2833aadc32ac604aa87a9edaa21e3b5, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: b2833aadc32ac604aa87a9edaa21e3b5, type: 3}
+      propertyPath: m_Name
+      value: Mantis visual v5
+      objectReference: {fileID: 0}
+    - target: {fileID: 5000715313767053150, guid: b2833aadc32ac604aa87a9edaa21e3b5, type: 3}
+      propertyPath: m_UpdateWhenOffscreen
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5000715313767053150, guid: b2833aadc32ac604aa87a9edaa21e3b5, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: f669f5baaaa6321478a35de2270afcf5, type: 2}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: b2833aadc32ac604aa87a9edaa21e3b5, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 8080223901736731243}
+  m_SourcePrefab: {fileID: 100100000, guid: b2833aadc32ac604aa87a9edaa21e3b5, type: 3}
+--- !u!4 &1153381446737006910 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 7736009018423556929, guid: b2833aadc32ac604aa87a9edaa21e3b5, type: 3}
+  m_PrefabInstance: {fileID: 8888541504131541631}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &1556910423721044132 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -1242658491350564133, guid: b2833aadc32ac604aa87a9edaa21e3b5, type: 3}
+  m_PrefabInstance: {fileID: 8888541504131541631}
+  m_PrefabAsset: {fileID: 0}
+--- !u!95 &3040181323883026414 stripped
+Animator:
+  m_CorrespondingSourceObject: {fileID: 5866666021909216657, guid: b2833aadc32ac604aa87a9edaa21e3b5, type: 3}
+  m_PrefabInstance: {fileID: 8888541504131541631}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &8618509483630303022 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: b2833aadc32ac604aa87a9edaa21e3b5, type: 3}
+  m_PrefabInstance: {fileID: 8888541504131541631}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &8080223901736731243
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8618509483630303022}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 70591d5b56d87c64bac4135608d97ce7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MantisPunch.MantisVisual
+  punchClip: {fileID: -623603649343465320, guid: b2833aadc32ac604aa87a9edaa21e3b5, type: 3}
+  animator: {fileID: 3040181323883026414}
+  leftClub: {fileID: 1153381446737006910}
+  rightClub: {fileID: 1556910423721044132}
+--- !u!4 &8993908473941904788 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: b2833aadc32ac604aa87a9edaa21e3b5, type: 3}
+  m_PrefabInstance: {fileID: 8888541504131541631}
+  m_PrefabAsset: {fileID: 0}
