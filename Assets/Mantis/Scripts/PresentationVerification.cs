@@ -11,7 +11,7 @@ namespace MantisPunch
         Report report = new Report(); MantisDuel duel; string folder;
         void Check(bool ok, string message) { (ok ? report.checks : report.failures).Add(message); }
         IEnumerator Shot(string name)
-        { yield return new WaitForEndOfFrame(); ScreenCapture.CaptureScreenshot(Path.Combine(folder, name + ".png")); yield return null; }
+        { yield return new WaitForEndOfFrame(); ReviewCapture.Save(Path.Combine(folder, name + ".png")); yield return null; }
         IEnumerator Start()
         {
             var args = Environment.GetCommandLineArgs(); int index = Array.IndexOf(args, "-presentationTest");
@@ -19,6 +19,10 @@ namespace MantisPunch
             folder = args[index + 1]; Directory.CreateDirectory(folder);
             Application.logMessageReceived += Log;
             yield return null; duel = FindFirstObjectByType<MantisDuel>(); duel.Testing = true;
+            var music = duel.GetComponent<ReefMusic>();
+            Check(music && music.loop && music.Playing && music.loop.channels == 2, "Stereo reef music starts independently of combat clocks");
+            double musicStarted = AudioSettings.dspTime;
+            Check(duel.player.visual.Ready && duel.cpu.visual.Ready && duel.player.visual.GetComponentsInChildren<SkinnedMeshRenderer>().Length == 6 && duel.cpu.visual.GetComponentsInChildren<SkinnedMeshRenderer>().Length == 6, "Both fighters use the six part model with playable rig");
             duel.StartDemo(1); duel.Testing = true;
             yield return new WaitForSeconds(.7f);
             Check(Vector3.Dot(duel.arenaCamera.transform.position - duel.Player.transform.position, duel.Player.transform.forward) < -2, "Camera sits behind player");
@@ -113,6 +117,34 @@ namespace MantisPunch
             Check(GameObject.Find("Imported impact GuardBreak") != null, "Short guard break effect spawns");
             yield return new WaitForSecondsRealtime(.32f);
             Check(GameObject.Find("Imported impact GuardBreak") == null, "Guard break particles clear within 320 ms");
+            duel.StartDemo(5); duel.Testing = false;
+            yield return new WaitForEndOfFrame();
+            foreach (var bone in duel.Player.visual.GetComponentsInChildren<Transform>())
+                if (bone.name == "propodus_L" || bone.name == "propodus_R")
+                {
+                    Transform tip = bone.Find(bone.name == "propodus_L" ? "dactyl_L" : "dactyl_R");
+                    if (duel.Player.visual.leftStrike) tip = bone.name == "propodus_L" ? duel.Player.visual.leftStrike : duel.Player.visual.rightStrike;
+                    Check(tip && tip.position.y < bone.position.y, "Folded striking body sits below its hinge: " + bone.name);
+                }
+            yield return Shot("10-folded-side");
+            yield return new WaitUntil(() => duel.Player.State == DuelState.Attack && duel.Player.Age >= DuelFighter.Impact);
+            yield return Shot("11-punch-side");
+            yield return new WaitUntil(() => duel.Player.Age >= .36f);
+            yield return Shot("12-return-under-side");
+            yield return new WaitUntil(() => duel.Player.State == DuelState.Guard);
+            yield return Shot("13-folded-return-side");
+            if (music && music.loop)
+            {
+                duel.Testing = true;
+                Check(music.battleTracks.Length == 3, "All three approved battle tracks are assigned");
+                int selections = music.RoundSelections;
+                duel.NextRound();
+                Check(music.RoundSelections == selections + 1 && System.Array.IndexOf(music.battleTracks, music.loop) >= 0, "Next round draws an approved track and starts playback");
+                AudioClip selected = music.loop;
+                musicStarted = AudioSettings.dspTime;
+                while (AudioSettings.dspTime - musicStarted < music.loop.length + 1) yield return null;
+                Check(music.Playing && music.loop == selected && music.RoundSelections == selections + 1, "Chosen track loops without rerolling during the round");
+            }
             report.passed = report.failures.Count == 0;
             File.WriteAllText(Path.Combine(folder, "report.json"), JsonUtility.ToJson(report, true));
             Application.logMessageReceived -= Log; Application.Quit(report.passed ? 0 : 1);

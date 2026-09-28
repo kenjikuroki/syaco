@@ -6,13 +6,18 @@ namespace MantisPunch
     public enum DuelState { Guard, Attack, Feint, Parry, Recovery, Stunned, Dead }
 
     // Both fighters are stepped and resolved together by MantisDuel, avoiding Update-order priority.
-    public sealed class DuelFighter : MonoBehaviour
+    public sealed partial class DuelFighter : MonoBehaviour
     {
         public MantisVisual visual;
         public FighterPresentation presentation;
         public DuelState State { get; private set; }
         public DuelAction LastAction { get; private set; }
         public float Guard { get; private set; } = 100;
+        MantisLoadout EquippedLoadout => visual ? visual.GetComponent<MantisLoadout>() : null;
+        public float EffectiveAttackCost => AttackCost - EquipmentMicroBonuses.AttackSaving(EquippedLoadout?.EquippedRobotMask ?? 0);
+        public float NormalMoveSpeed => 1.65f * EquipmentMicroBonuses.MoveMultiplier(EquippedLoadout?.EquippedUnicornMask ?? 0);
+        public float GuardRecoveryRate => 100f / 9 + EquipmentMicroBonuses.Recovery(EquippedLoadout?.WearingCrown ?? false);
+        public float EquipmentGuardDamage => BoxerSetBonus.GuardDamage(visual ? (visual.GetComponent<MantisLoadout>()?.EquippedBoxerMask ?? 0) : 0);
         public float Age { get; private set; }
         public float TimeSinceGuard { get; private set; } = 10;
         public float GuardBreakAt { get; private set; } = -100;
@@ -34,6 +39,7 @@ namespace MantisPunch
         public bool Available => State == DuelState.Guard;
         public string Feedback { get; private set; } = "";
         public float FeedbackLeft { get; private set; }
+        public int SuccessfulParries { get; private set; }
         CharacterController body;
         Vector3 velocity;
         float recoveryTime, gait;
@@ -62,8 +68,8 @@ namespace MantisPunch
             if (!Available || action == DuelAction.None) return false;
             if (action == DuelAction.Attack)
             {
-                if (Guard < AttackCost) { Show("LOW GUARD"); return false; }
-                Guard = Mathf.Max(0, Guard - AttackCost); TimeSinceGuard = 0;
+                if (Guard < EffectiveAttackCost) { Show("LOW GUARD"); return false; }
+                Guard = Mathf.Max(0, Guard - EffectiveAttackCost); TimeSinceGuard = 0;
                 CombatEffects.Current?.CounterStarted(this);
             }
             attackWasBlocked = false;
@@ -78,7 +84,7 @@ namespace MantisPunch
             FeedbackLeft = Mathf.Max(0, FeedbackLeft - dt); TimeSinceGuard += dt;
             if (!Alive) return;
             float previous = Age; Age += dt; gait += dt;
-            if (State != DuelState.Stunned && TimeSinceGuard > 2) Guard = Mathf.Min(100, Guard + dt * (100f / 9));
+            if (State != DuelState.Stunned && TimeSinceGuard > 2) Guard = Mathf.Min(100, Guard + dt * GuardRecoveryRate);
             if (State == DuelState.Attack && previous < Impact && Age >= Impact && !StrikeSpent) PendingStrike = true;
             if (State == DuelState.Attack && Age >= AttackEnd && !PendingStrike) ToGuard();
             else if (State == DuelState.Feint && Age >= .43f) ToGuard();
@@ -92,7 +98,7 @@ namespace MantisPunch
                 Vector3 facing = other.transform.position - transform.position; facing.y = 0;
                 if (facing.sqrMagnitude > .001f) transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(facing), dt * 720);
             }
-            float speed = State == DuelState.Guard ? 1.65f : State == DuelState.Feint ? .25f : 0;
+            float speed = State == DuelState.Guard ? NormalMoveSpeed : State == DuelState.Feint ? .25f : 0;
             velocity = Vector3.MoveTowards(velocity, desired * speed, dt * 16);
             body.Move((velocity + Vector3.down * 3) * dt);
             if (State == DuelState.Attack)
@@ -135,7 +141,7 @@ namespace MantisPunch
             if (!Alive) return;
             if (ParryActive)
             {
-                attacker.Recover(1.05f, "PARRIED!"); ToGuard(); Show("PARRY!");
+                SuccessfulParries++; attacker.Recover(1.05f, "PARRIED!"); ToGuard(); Show("PARRY!");
                 CombatEffects.Current?.FocusParry(this, attacker);
                 Vector3 contact = (visual.StrikePoint + attacker.visual.StrikePoint) * .5f;
                 presentation.React(CombatBeat.Parry, transform.right, contact);
@@ -148,7 +154,7 @@ namespace MantisPunch
                 presentation.React(CombatBeat.Knockout, attacker.transform.forward); return;
             }
             attacker.attackWasBlocked = true;
-            Guard = Mathf.Max(0, Guard - 100f / 3); TimeSinceGuard = 0; Show("GUARD");
+            Guard = Mathf.Max(0, Guard - (100f / 3 + attacker.EquipmentGuardDamage)); TimeSinceGuard = 0; Show("GUARD");
             body.Move(attacker.transform.forward * .08f);
             if (Guard < .01f)
             { Guard = 0; State = DuelState.Stunned; Age = 0; PendingStrike = false; GuardBreakAt = Time.unscaledTime; Show("GUARD BREAK!"); presentation.React(CombatBeat.GuardBreak, attacker.transform.forward); }
@@ -167,4 +173,8 @@ namespace MantisPunch
         }
     }
 }
+
+
+
+
 

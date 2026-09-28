@@ -1,0 +1,46 @@
+{
+  "modules": {
+    "01_Cephalothorax": {
+      "vertices": 1437,
+      "triangles": 2798,
+      "uv": true,
+      "unweighted": 0
+    },
+    "02_PunchArm_L": {
+      "vertices": 268,
+      "triangles": 524,
+      "uv": true,
+      "unweighted": 0
+    },
+    "03_PunchArm_R": {
+      "vertices": 268,
+      "triangles": 524,
+      "uv": true,
+      "unweighted": 0
+    },
+    "04_Abdomen": {
+      "vertices": 4750,
+      "triangles": 9124,
+      "uv": true,
+      "unweighted": 0
+    },
+    "05_Tail": {
+      "vertices": 779,
+      "triangles": 1518,
+      "uv": true,
+      "unweighted": 0
+    },
+    "06_WalkingLegs": {
+      "vertices": 1056,
+      "triangles": 2040,
+      "uv": true,
+      "unweighted": 0
+    }
+  },
+  "total_triangles": 16528,
+  "bones": 43,
+  "materials": 1,
+  "texture": "1024x1024",
+  "scale": "meters, forward -Y in Blender, FBX -Z forward Y up",
+  "game_integrated": false
+}

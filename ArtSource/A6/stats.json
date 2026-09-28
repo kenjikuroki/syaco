@@ -1,0 +1,15 @@
+{
+  "slots": {
+    "01_Cephalothorax": 1224,
+    "02_PunchArm_L": 588,
+    "03_PunchArm_R": 588,
+    "04_Abdomen": 1296,
+    "05_Tail": 220,
+    "06_WalkingLegs": 672
+  },
+  "triangles": 4588,
+  "bones": 35,
+  "animation_frames": 42,
+  "texture": "1024x1024",
+  "version": "A6_v1"
+}

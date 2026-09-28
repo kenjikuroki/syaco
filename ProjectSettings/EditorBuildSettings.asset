@@ -6,8 +6,11 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Mantis/Generated/Practice.unity
-    guid: 2a4cb1ff24295eb4ead8ccaea5d39b59
+    path: Assets/Mantis/Generated/Home.unity
+    guid: 79d98434b79ad724abc105fe1ea6da1a
+  - enabled: 1
+    path: Assets/Mantis/Generated/Duel.unity
+    guid: adb5c046e4e56f94ca17ad3d60e0bf73
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   m_UseUCBPForAssetBundles: 0

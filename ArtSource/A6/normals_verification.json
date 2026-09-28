@@ -1,0 +1,44 @@
+[
+  {
+    "mesh": "Head_carapace.001",
+    "flipped_faces": 444,
+    "closed_islands": 23,
+    "open_islands": 0,
+    "negative_after": 0
+  },
+  {
+    "mesh": "Head_carapace.002",
+    "flipped_faces": 380,
+    "closed_islands": 10,
+    "open_islands": 0,
+    "negative_after": 0
+  },
+  {
+    "mesh": "Head_carapace.003",
+    "flipped_faces": 380,
+    "closed_islands": 10,
+    "open_islands": 0,
+    "negative_after": 0
+  },
+  {
+    "mesh": "Head_carapace.004",
+    "flipped_faces": 840,
+    "closed_islands": 40,
+    "open_islands": 0,
+    "negative_after": 0
+  },
+  {
+    "mesh": "Head_carapace.005",
+    "flipped_faces": 0,
+    "closed_islands": 15,
+    "open_islands": 0,
+    "negative_after": 0
+  },
+  {
+    "mesh": "Head_carapace.006",
+    "flipped_faces": 456,
+    "closed_islands": 18,
+    "open_islands": 0,
+    "negative_after": 0
+  }
+]

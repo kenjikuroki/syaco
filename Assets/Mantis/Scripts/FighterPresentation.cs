@@ -10,6 +10,8 @@ namespace MantisPunch
         Transform[] upper = new Transform[2], lower = new Transform[2], club = new Transform[2];
         Transform eyeL, eyeR;
         Transform thorax;
+        readonly Transform[] walkingUpper = new Transform[6], walkingLower = new Transform[6], walkingFoot = new Transform[6];
+        float legPhase;
         Vector3 sweepDirection, contactPoint;
         int deflectedArm;
         float ChestRecoil => Mathf.SmoothStep(0, 1, Mathf.InverseLerp(.025f, .11f, GestureAge)) * (1 - Mathf.SmoothStep(0, 1, Mathf.InverseLerp(.55f, 1.05f, GestureAge)));
@@ -24,6 +26,13 @@ namespace MantisPunch
         bool counterPunch;
         public Vector3 VisiblePosition => visual ? visual.transform.position : transform.position;
         public float DeathAge => deathAge;
+        public int NetworkReaction {get;private set;}
+        public CombatBeat NetworkBeat {get;private set;}
+        public Vector3 NetworkDirection {get;private set;}
+        public float GuardAmount => reaction == CombatBeat.Guard &&
+            (fighter.State == DuelState.Guard || fighter.State == DuelState.Attack && fighter.Age < DuelFighter.Windup)
+            ? 1 - Mathf.SmoothStep(0, 1, Mathf.InverseLerp(.09f, .30f, reactionAge)) : 0;
+        public Vector3 LastGuardContact { get; private set; }
         public void Initialize(DuelFighter owner)
         {
             fighter = owner; visual = owner.visual;
@@ -32,11 +41,17 @@ namespace MantisPunch
             for (int i = 0; i < 2; i++) { string side = i == 0 ? "L" : "R"; upper[i] = Find("merus_" + side); lower[i] = Find("propodus_" + side); club[i] = Find("dactyl_" + side); }
             eyeL = Find("eye_L"); eyeR = Find("eye_R");
             thorax = Find("thorax");
+            for (int i = 0; i < 6; i++)
+            {
+                string suffix = (i < 3 ? "L_" : "R_") + (i % 3);
+                walkingUpper[i] = Find("leg_upper_" + suffix); walkingLower[i] = Find("leg_lower_" + suffix); walkingFoot[i] = Find("foot_" + suffix);
+            }
         }
         public void ResetPose()
         {
             deathAge = -1; landed = swung = false; reactionAge = 10; recoilLeft = 0;
             counterPunch = false;
+            legPhase = 0;
             visual.transform.localPosition = originalPosition; visual.transform.localRotation = originalRotation;
             visual.Sample(.18f, 0, 0);
         }
@@ -44,7 +59,7 @@ namespace MantisPunch
         {
             swung = kicked = false; oldAttackAge = 0;
             counterPunch = action == DuelAction.Attack && reaction == CombatBeat.Parry && reactionAge < 1.05f;
-            if (reaction == CombatBeat.Parry) reactionAge = 10;
+            if (reaction == CombatBeat.Parry || reaction == CombatBeat.Guard) reactionAge = 10;
             if (action == DuelAction.Attack || action == DuelAction.Feint)
                 CombatEffects.Current?.Play(CombatBeat.Prepare, (eyeL.position + eyeR.position) * .5f, transform.forward);
         }
@@ -52,6 +67,7 @@ namespace MantisPunch
         { recoilDirection = direction.normalized; recoilStrength = strength; recoilLeft = .3f; }
         public void React(CombatBeat beat, Vector3 direction, Vector3? impactPoint = null)
         {
+            NetworkReaction++;NetworkBeat=beat;NetworkDirection=direction;
             reaction = beat; reactionAge = 0;
             if (beat == CombatBeat.Deflected) deflectedArm = counterPunch ? 1 : 0;
             Vector3 contact = impactPoint ?? (transform.position + Vector3.up * .85f + transform.forward * .55f);
@@ -60,6 +76,13 @@ namespace MantisPunch
             if (beat == CombatBeat.Knockout)
             { deathAge = 0; launchDirection = direction.normalized; landed = false; }
             else if (beat == CombatBeat.Guard || beat == CombatBeat.Clash) Recoil(direction, beat == CombatBeat.Guard ? .38f : .18f);
+            if (beat == CombatBeat.Guard)
+            {
+                // Pose the receiving arms before locating the spark on their surface.
+                ApplyPose();
+                contact = visual.StrikePoint + transform.forward * .035f;
+                LastGuardContact = contact;
+            }
             CombatEffects.Current?.Play(beat, contact, direction);
         }
         public void ApplyPose()
@@ -74,6 +97,8 @@ namespace MantisPunch
             if (reaction == CombatBeat.Parry && GestureAge < .38f) sample = .28f;
             if (reaction == CombatBeat.Deflected && GestureAmount > 0) sample = .30f;
             if (fighter.State == DuelState.Attack && age >= DuelFighter.Impact && age < DuelFighter.Impact + .055f) sample = 17f / 41;
+            if (fighter.State == DuelState.Attack && age >= DuelFighter.Impact + .055f)
+                sample = Mathf.Lerp(17f / 41, .18f, Mathf.SmoothStep(0, 1, Mathf.InverseLerp(DuelFighter.Impact + .055f, DuelFighter.AttackEnd, age)));
             visual.Sample(sample, 0, 0);
             if (reaction == CombatBeat.Deflected && thorax && GestureAmount > 0)
             {
@@ -83,22 +108,16 @@ namespace MantisPunch
                     * Quaternion.AngleAxis(6 * recoil * sign, Vector3.up)
                     * Quaternion.AngleAxis(-7 * recoil * sign, transform.forward) * thorax.rotation;
             }
-            Vector3 face = (eyeL.position + eyeR.position) * .5f;
+            Vector3 face = (eyeL.position + eyeR.position) * .5f - Vector3.up * .22f;
             if (thorax && reaction == CombatBeat.Parry && GestureAge < .55f)
                 thorax.rotation = Quaternion.AngleAxis(-8 * Mathf.SmoothStep(0, 1, GestureAge / .075f), Vector3.up) * thorax.rotation;
             for (int i = 0; i < 2; i++)
             {
                 float side = i == 0 ? -1 : 1;
                 Vector3 target = face - Vector3.up * .12f + transform.forward * .1f + transform.right * side * .13f;
-                float weight = fighter.State == DuelState.Guard ? 1 : 0;
-                if (fighter.State == DuelState.Attack && age < .18f) weight = 1 - age / .18f;
-                if (fighter.State == DuelState.Feint) weight = age < .18f ? 1 - age / .18f : Mathf.InverseLerp(.24f, .43f, age);
-                if (fighter.State == DuelState.Attack && age >= DuelFighter.Windup)
-                {
-                    float extend = Mathf.InverseLerp(DuelFighter.Windup, DuelFighter.Impact, age) * (1 - Mathf.InverseLerp(.31f, .48f, age));
-                    target = face + transform.forward * .58f - Vector3.up * .2f + transform.right * side * .12f;
-                    weight = extend;
-                }
+                // The authored folded appendage and strike preserve the ventral hinge.
+                // Face-directed CCD used to lift the folded club above the merus.
+                float weight = 0;
                 if (fighter.State == DuelState.Parry)
                 {
                     float sweep = Mathf.Sin(Mathf.Clamp01(age / DuelFighter.ParryWindow) * Mathf.PI);
@@ -115,12 +134,8 @@ namespace MantisPunch
                 }
                 if (counterPunch && fighter.State == DuelState.Attack)
                 {
-                    float drive = Mathf.SmoothStep(0, 1, Mathf.InverseLerp(DuelFighter.Windup, DuelFighter.Impact, age));
-                    float retract = 1 - Mathf.InverseLerp(DuelFighter.Impact + .055f, DuelFighter.AttackEnd, age);
-                    Vector3 chamber = face - Vector3.up * .10f + transform.right * side * .13f + transform.forward * .02f;
-                    target = i == 0 ? face - Vector3.up * .14f + transform.forward * .20f + transform.right * .10f
-                        : Vector3.Lerp(chamber, face + transform.forward * .65f - Vector3.up * .18f + transform.right * .10f, drive * retract);
-                    weight = 1;
+                    target = face - Vector3.up * .14f + transform.forward * .20f + transform.right * .10f;
+                    weight = i == 0 ? 1 : 0;
                 }
                 if (fighter.State == DuelState.Recovery || fighter.State == DuelState.Stunned)
                 { target = face + transform.right * side * .52f - Vector3.up * .4f; weight = .8f; }
@@ -132,6 +147,12 @@ namespace MantisPunch
                     weight = GestureAmount;
                 }
                 if (weight > 0) AimArm(i, target, weight);
+                if (GuardAmount > 0)
+                {
+                    // Lift the entire folded appendage; do not unfold the distal club above the merus.
+                    upper[i].rotation = Quaternion.AngleAxis(-side * 9 * GuardAmount, Vector3.up)
+                        * Quaternion.AngleAxis(-52 * GuardAmount, transform.right) * upper[i].rotation;
+                }
             }
             if (fighter.State == DuelState.Attack && age >= DuelFighter.Windup && !swung)
             { swung = true; CombatEffects.Current?.Play(CombatBeat.Swing, visual.StrikePoint, transform.forward); }
@@ -173,6 +194,16 @@ namespace MantisPunch
                 return;
             }
             ApplyPose();
+            legPhase += dt * 7;
+            for (int i = 0; i < 6; i++)
+            {
+                if (!walkingUpper[i] || !walkingLower[i]) continue;
+                Vector3 toe = walkingFoot[i] ? walkingLower[i].InverseTransformPoint(walkingFoot[i].position) : Vector3.zero;
+                float wave = Mathf.Sin(legPhase - i % 3 * 1.8f + (i < 3 ? 0 : Mathf.PI));
+                walkingUpper[i].localRotation *= Quaternion.Euler(wave * 9, 0, wave * 3);
+                walkingLower[i].localRotation *= Quaternion.Euler(-wave * 13, 0, 0);
+                if (walkingFoot[i]) walkingFoot[i].position = walkingLower[i].TransformPoint(toe);
+            }
             float kick = recoilLeft > 0 ? Mathf.Sin((1 - recoilLeft / .3f) * Mathf.PI) : 0;
             recoilLeft = Mathf.Max(0, recoilLeft - dt);
             visual.transform.localPosition += transform.InverseTransformDirection(recoilDirection * recoilStrength * kick);

@@ -4,17 +4,21 @@ using UnityEditor.SceneManagement;
 using UnityEditor.Build.Reporting;
 using MantisPunch;
 using System.IO;
+using System.Linq;
 
 public static class DuelBuilder
 {
     [MenuItem("Mantis/Build duel prototype")]
     public static void Build()
     {
+        DModelBuilder.BuildModel();
+        CombatSoundVerification.Verify();
         EditorSceneManager.OpenScene("Assets/Mantis/Generated/Practice.unity");
         foreach (var target in Object.FindObjectsByType<TrainingTarget>(FindObjectsSortMode.None)) Object.DestroyImmediate(target.gameObject);
         foreach (var hud in Object.FindObjectsByType<MantisHud>(FindObjectsSortMode.None)) Object.DestroyImmediate(hud.gameObject);
         foreach (var test in Object.FindObjectsByType<RuntimeSmokeTest>(FindObjectsSortMode.None)) Object.DestroyImmediate(test.gameObject);
         var player = Object.FindFirstObjectByType<MantisPlayer>();
+        DModelBuilder.ReplaceVisual(player);
         var cpu = Object.Instantiate(player); cpu.name = "CPU Mantis";
         player.duelMode = cpu.duelMode = true; player.opponent = cpu; cpu.opponent = player;
         player.controls.Duel = true; cpu.automation = true;
@@ -26,9 +30,10 @@ public static class DuelBuilder
         var existing = AssetDatabase.LoadAssetAtPath<Material>(matPath);
         if (existing) { EditorUtility.CopySerialized(shell, existing); Object.DestroyImmediate(shell); shell = existing; }
         else AssetDatabase.CreateAsset(shell, matPath);
-        cpu.visual.GetComponentInChildren<Renderer>().sharedMaterial = shell;
+        foreach (var renderer in cpu.visual.GetComponentsInChildren<SkinnedMeshRenderer>()) renderer.sharedMaterial = shell;
         var follow = Object.FindFirstObjectByType<MantisCamera>(); var camera = follow.GetComponent<Camera>(); Object.DestroyImmediate(follow);
         var duel = new GameObject("Duel rules and CPU").AddComponent<MantisDuel>(); duel.player = player; duel.cpu = cpu; duel.arenaCamera = camera;
+        duel.gameObject.AddComponent<ReefMusic>().battleTracks = ReefMusicBuilder.LoadBattleTracks();
         duel.indicatorShader = Shader.Find("Universal Render Pipeline/Unlit");
         var imported = duel.gameObject.AddComponent<ImportedHitEffects>();
         const string fxRoot = "Assets/Matthew Guz/Hits Effects FREE/Prefab/";
@@ -49,14 +54,27 @@ public static class DuelBuilder
         duel.gameObject.AddComponent<DuelVerification>();
         duel.gameObject.AddComponent<PresentationVerification>();
         player.transform.position = new Vector3(0, 0, -1.6f); cpu.transform.position = new Vector3(0, 0, 1.6f); cpu.transform.rotation = Quaternion.Euler(0, 180, 0);
+        ShallowReefBuilder.Build(camera);
+        DistantReefBuilder.Build(camera);
         const string scene = "Assets/Mantis/Generated/Duel.unity";
         EditorSceneManager.SaveScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene(), scene);
-        AssetDatabase.SaveAssets(); Directory.CreateDirectory("Builds/DeflectRecoilDuel");
-        var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions { scenes = new[] { scene }, locationPathName = "Builds/DeflectRecoilDuel/ShakoDeflectRecoil.exe", target = BuildTarget.StandaloneWindows64, options = BuildOptions.Development });
+        AssetDatabase.SaveAssets(); Directory.CreateDirectory("Builds/NaturalBodyDuel");
+        var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions { scenes = new[] { scene }, locationPathName = "Builds/NaturalBodyDuel/ShakoNaturalBody.exe", target = BuildTarget.StandaloneWindows64, options = BuildOptions.Development });
         File.WriteAllText("QA/duel-build.txt", report.summary.result + " errors=" + report.summary.totalErrors);
         if (report.summary.result != BuildResult.Succeeded) throw new System.Exception("Duel build failed");
     }
 }
+
+
+
+
+
+
+
+
+
+
+
 
 
 

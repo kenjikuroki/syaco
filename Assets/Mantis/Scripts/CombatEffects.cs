@@ -25,20 +25,23 @@ namespace MantisPunch
         Vector3 parryPoint, parryDirection;
         public int Played { get; private set; }
         readonly Dictionary<CombatBeat, Material> materials = new Dictionary<CombatBeat, Material>();
-        readonly Dictionary<CombatBeat, AudioClip> sounds = new Dictionary<CombatBeat, AudioClip>();
+        readonly Dictionary<CombatBeat, AudioClip[]> sounds = new Dictionary<CombatBeat, AudioClip[]>();
+        readonly Dictionary<CombatBeat, int> soundVariations = new Dictionary<CombatBeat, int>();
         readonly List<CombatBurst> bursts = new List<CombatBurst>();
         AudioSource audioSource;
         public void Initialize(Shader shader)
         {
             Current = this;
-            audioSource = gameObject.AddComponent<AudioSource>(); audioSource.spatialBlend = 0; audioSource.volume = .45f;
+            audioSource = gameObject.AddComponent<AudioSource>(); audioSource.spatialBlend = 0; audioSource.volume = .65f;
+            audioSource.playOnAwake = false;
             foreach (CombatBeat beat in System.Enum.GetValues(typeof(CombatBeat)))
             {
                 var material = new Material(shader);
                 Color color = beat == CombatBeat.Guard ? new Color(1, .72f, .25f) : beat == CombatBeat.Parry ? new Color(.45f, .9f, 1) : beat == CombatBeat.Knockout ? new Color(1, .94f, .75f) : beat == CombatBeat.Land ? new Color(.6f, .48f, .28f) : new Color(.55f, .9f, .93f);
                 material.SetColor("_BaseColor", color); materials[beat] = material;
                 if (beat == CombatBeat.GuardBreak) material.SetColor("_BaseColor", new Color(1, .35f, .12f));
-                sounds[beat] = MakeSound(beat);
+                sounds[beat] = new[] { CombatSoundDesign.Create(beat, 0), CombatSoundDesign.Create(beat, 1), CombatSoundDesign.Create(beat, 2) };
+                soundVariations[beat] = 0;
             }
         }
         public void Play(CombatBeat beat, Vector3 position, Vector3 direction)
@@ -59,7 +62,10 @@ namespace MantisPunch
         {
             if (beat == CombatBeat.Deflected) return;
             Played++;
-            audioSource.PlayOneShot(sounds[beat], beat == CombatBeat.Prepare ? .38f : beat == CombatBeat.Swing ? .45f : 1);
+            if (beat == CombatBeat.Guard || beat == CombatBeat.Parry || beat == CombatBeat.Knockout || beat == CombatBeat.GuardBreak || beat == CombatBeat.Clash)
+                GetComponent<ReefMusic>()?.Accent(beat);
+            int variation = soundVariations[beat]; soundVariations[beat] = (variation + 1) % 3;
+            audioSource.PlayOneShot(sounds[beat][variation], CombatSoundDesign.Gain(beat));
             var imported = GetComponent<ImportedHitEffects>();
             if (!imported || !imported.Play(beat, position, direction))
             {
@@ -86,6 +92,7 @@ namespace MantisPunch
         }
         void Update()
         {
+            if (Time.timeScale == 0) return;
             HitStop = Mathf.Max(0, HitStop - Time.unscaledDeltaTime);
             parrySequence = Mathf.Max(0, parrySequence - Time.unscaledDeltaTime);
             if (parryZoom)
@@ -113,22 +120,7 @@ namespace MantisPunch
         {
             if (Current == this) Current = null;
             foreach (var material in materials.Values) Destroy(material);
-            foreach (var sound in sounds.Values) Destroy(sound);
-        }
-        AudioClip MakeSound(CombatBeat beat)
-        {
-            int rate = 22050; float duration = beat == CombatBeat.Knockout ? .48f : beat == CombatBeat.Parry ? .28f : .16f;
-            var data = new float[Mathf.CeilToInt(rate * duration)]; var noise = new System.Random(71 + (int)beat);
-            float frequency = beat == CombatBeat.Parry ? 1450 : beat == CombatBeat.Guard ? 155 : beat == CombatBeat.Knockout ? 65 : 130;
-            if (beat == CombatBeat.GuardBreak) frequency = 75;
-            for (int i = 0; i < data.Length; i++)
-            {
-                float t = (float)i / rate, envelope = Mathf.Pow(1 - t / duration, 3);
-                float tone = Mathf.Sin(2 * Mathf.PI * frequency * t) + .3f * Mathf.Sin(2 * Mathf.PI * frequency * 2.71f * t);
-                float hiss = (float)noise.NextDouble() * 2 - 1;
-                data[i] = (tone * (beat == CombatBeat.Swing ? .04f : .45f) + hiss * .3f) * envelope * Mathf.Min(1, t * 1000);
-            }
-            var clip = AudioClip.Create("Mantis " + beat, data.Length, 1, rate, false); clip.SetData(data, 0); return clip;
+            foreach (var variants in sounds.Values) foreach (var sound in variants) Destroy(sound);
         }
     }
     public sealed class CombatBurst : MonoBehaviour

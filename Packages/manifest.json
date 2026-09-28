@@ -1,5 +1,12 @@
 {
+  "scopedRegistries": [{"name":"Google OpenUPM","url":"https://package.openupm.com","scopes":["com.google"]}],
   "dependencies": {
+    "com.unity.services.multiplayer": "2.3.3",
+    "com.unity.netcode.gameobjects": "2.13.3",
+    "com.unity.purchasing": "5.4.3",
+    "com.unity.services.leaderboards": "2.3.4",
+    "com.unity.services.cloudcode": "2.10.4",
+    "com.google.ads.mobile": "11.5.0",
     "com.unity.ai.navigation": "2.0.10",
     "com.unity.collab-proxy": "2.11.3",
     "com.unity.ide.rider": "3.0.39",

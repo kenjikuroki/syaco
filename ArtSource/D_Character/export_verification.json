@@ -1,0 +1,30 @@
+{
+  "fbx": {
+    "meshes": 6,
+    "bones": 43,
+    "materials": 1,
+    "dimensions_m": [
+      0.4360700696706772,
+      1.033503919839859,
+      0.4008637103252113
+    ],
+    "unweighted_vertices": 0,
+    "texture_resolved": true,
+    "arm_deformation": true,
+    "pleopod_deformation": true
+  },
+  "glb": {
+    "meshes": 6,
+    "bones": 43,
+    "materials": 1,
+    "dimensions_m": [
+      0.4360700696706772,
+      1.0335069298744202,
+      0.4008677403908223
+    ],
+    "unweighted_vertices": 0,
+    "texture_resolved": true,
+    "arm_deformation": true,
+    "pleopod_deformation": true
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "triangles": 23096,
+  "slots": [
+    "01_Cephalothorax",
+    "02_PunchArm_L",
+    "03_PunchArm_R",
+    "04_Abdomen",
+    "05_Tail",
+    "06_WalkingLegs"
+  ],
+  "unweighted": 0
+}

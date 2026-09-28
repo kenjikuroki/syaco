@@ -8,10 +8,11 @@ namespace MantisPunch
     {
         public Vector2 Stick { get; private set; }
         public Vector2 Move { get; private set; }
-        public Vector2 StickCenter => new Vector2(Screen.safeArea.xMin + 118 * Scale, Screen.safeArea.yMin + 120 * Scale);
+        public bool BattleLayoutEnabled;
+        public Vector2 StickCenter => BattleLayoutEnabled ? BattleLayout.ScreenPoint(BattleLayout.Stick) : new Vector2(Screen.safeArea.xMin + 118 * Scale, Screen.safeArea.yMin + 120 * Scale);
         public Vector2 AttackCenter => new Vector2(Screen.safeArea.xMax - 116 * Scale, Screen.safeArea.yMin + 120 * Scale);
         public float Scale => Mathf.Clamp(Mathf.Min(Screen.width / 1100f, Screen.height / 650f), .65f, 2f);
-        public float Radius => 76 * Scale;
+        public float Radius => BattleLayoutEnabled ? BattleLayout.Radius * BattleLayout.Scale * .65f : 76 * Scale;
         public int MovePointer { get; private set; } = int.MinValue;
         bool attack;
         bool dodge;
@@ -30,8 +31,8 @@ namespace MantisPunch
             if (phase == TouchPhase.Began)
             {
                 if (blocked) return;
-                if (Duel && Vector2.Distance(point, DodgeCenter) < 62 * Scale) { dodge = true; return; }
-                if (Vector2.Distance(point, AttackCenter) < 66 * Scale) { attack = true; return; }
+                if (!BattleLayoutEnabled && Duel && Vector2.Distance(point, DodgeCenter) < 62 * Scale) { dodge = true; return; }
+                if (!BattleLayoutEnabled && Vector2.Distance(point, AttackCenter) < 66 * Scale) { attack = true; return; }
                 if (MovePointer == int.MinValue && Vector2.Distance(point, StickCenter) < Radius * 1.5f) MovePointer = id;
             }
             if (id == MovePointer)
@@ -58,13 +59,14 @@ namespace MantisPunch
             Vector2 keys = new Vector2(
                 (Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow) ? 1 : 0) - (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow) ? 1 : 0),
                 (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.UpArrow) ? 1 : 0) - (Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow) ? 1 : 0));
-            Move = Vector2.ClampMagnitude(keys + Stick, 1);
-            if (Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.J)) attack = true;
+            var pad=UnityEngine.InputSystem.Gamepad.current; Vector2 analog=pad==null?Vector2.zero:pad.leftStick.ReadValue(); Move = Vector2.ClampMagnitude(keys + Stick + analog, 1);
+            if (UnityEngine.InputSystem.Gamepad.current?.buttonWest.wasPressedThisFrame == true || Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.J)) attack = true;
         }
 
-        public void Reset() { Stick = Move = Vector2.zero; MovePointer = int.MinValue; attack = false; }
+        public void Reset() { Stick = Move = Vector2.zero; MovePointer = int.MinValue; attack = dodge = false; }
         public static Vector2 ToGui(Vector2 point) => new Vector2(point.x, Screen.height - point.y);
     }
 }
+
 
 
